@@ -2,7 +2,9 @@ import { format } from 'date-fns';
 import { studyDataStorage } from './storage';
 
 export async function saveStudyTimeToPlanner(startMs: number, endMs: number, subjectId: string) {
-  const dateStr = format(new Date(startMs), 'yyyy-MM-dd');
+  // A logical day starts at 05:00
+  const logicalStartMs = startMs - 5 * 3600 * 1000;
+  const dateStr = format(new Date(logicalStartMs), 'yyyy-MM-dd');
   const allData = await studyDataStorage.getValue();
   let todayData = allData.find(d => d.date === dateStr);
   
@@ -20,8 +22,11 @@ export async function saveStudyTimeToPlanner(startMs: number, endMs: number, sub
     const hour = d.getHours();
     const minute = d.getMinutes();
     
+    // Day starts at 05:00. 05:XX -> hour 0, 04:XX -> hour 23
+    const adjustedHour = (hour + 19) % 24;
+    
     // Block index (0 to 143)
-    const blockIndex = (hour * 6) + Math.floor(minute / 10);
+    const blockIndex = (adjustedHour * 6) + Math.floor(minute / 10);
     
     // Nearest next 10-minute boundary or end of session
     const endOfMinuteMs = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hour, minute, 59, 999).getTime() + 1;

@@ -10,7 +10,14 @@ export default defineConfig({
     name: 'TabFocus',
     description: 'Study timer and focus tracker inspired by Yeolpumta',
     browser_specific_settings: {
-      gecko: { id: "pthfdsa@gmail.com" }
+      gecko: {
+        id: "pthfdsa@gmail.com",
+        // @ts-ignore
+        data_collection_permissions: {
+          is_optional: false,
+          unknown_data_policy: "none"
+        }
+      }
     }
   },
 });

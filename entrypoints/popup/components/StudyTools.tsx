@@ -166,16 +166,23 @@ function StandaloneTimer() {
   };
 
   const handleSaveEdit = async () => {
-    const h = parseInt(inputH) || 0;
-    const m = parseInt(inputM) || 0;
-    const s = parseInt(inputS) || 0;
+    let h = parseInt(inputH) || 0;
+    let m = parseInt(inputM) || 0;
+    let s = parseInt(inputS) || 0;
     
-    // clamp to 59
-    const cm = Math.min(m, 59);
-    const cs = Math.min(s, 59);
+    // Auto-carry overflow (e.g. 70s -> 1m 10s)
+    m += Math.floor(s / 60);
+    const cs = s % 60;
+    
+    h += Math.floor(m / 60);
+    const cm = m % 60;
 
-    const total = h * 3600 + cm * 60 + cs;
+    // Cap hours at 99 technically, or just let it be
+    const ch = Math.min(h, 99);
+
+    const total = ch * 3600 + cm * 60 + cs;
     setTime(total);
+    setInputH(ch.toString().padStart(2, '0'));
     setInputM(cm.toString().padStart(2, '0'));
     setInputS(cs.toString().padStart(2, '0'));
     setIsEditing(false);
@@ -258,11 +265,10 @@ function StandaloneTimer() {
               onChange={e => setInputM(e.target.value)} 
               onBlur={() => {
                 const val = parseInt(inputM);
-                if (isNaN(val) || val >= 60) setInputM('00');
-                else setInputM(val.toString().padStart(2, '0'));
+                setInputM((isNaN(val) ? 0 : val).toString().padStart(2, '0'));
               }}
               className="w-[60px] bg-dark-bg/50 border border-dark-border rounded-lg px-2 py-2 text-center focus:outline-none focus:border-primary-500 hide-arrows"
-              min="0" max="59" placeholder="00"
+              min="0" placeholder="00"
             />
             <span className="text-gray-400">:</span>
             <input 
@@ -271,11 +277,10 @@ function StandaloneTimer() {
               onChange={e => setInputS(e.target.value)} 
               onBlur={() => {
                 const val = parseInt(inputS);
-                if (isNaN(val) || val >= 60) setInputS('00');
-                else setInputS(val.toString().padStart(2, '0'));
+                setInputS((isNaN(val) ? 0 : val).toString().padStart(2, '0'));
               }}
               className="w-[60px] bg-dark-bg/50 border border-dark-border rounded-lg px-2 py-2 text-center focus:outline-none focus:border-primary-500 hide-arrows"
-              min="0" max="59" placeholder="00"
+              min="0" placeholder="00"
             />
             <button onClick={handleSaveEdit} className="text-sm bg-primary-500 hover:bg-primary-400 transition-colors text-dark-bg px-3 py-3 rounded-lg ml-2 font-bold whitespace-nowrap">확인</button>
           </div>

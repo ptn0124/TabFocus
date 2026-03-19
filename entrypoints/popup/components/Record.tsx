@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { studyDataStorage, subjectsStorage, focusStateStorage, DailyStudyData, Subject } from '../../../utils/storage';
-import { format, addDays, subDays } from 'date-fns';
+import { format, addDays, subDays, subHours } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function Record() {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date>(() => subHours(new Date(), 5));
   const [allStudyData, setAllStudyData] = useState<DailyStudyData[]>([]);
   const [todayData, setTodayData] = useState<DailyStudyData | null>(null);
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -42,7 +42,7 @@ export default function Record() {
     return () => clearInterval(interval);
   }, []);
 
-  const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+  const isToday = format(selectedDate, 'yyyy-MM-dd') === format(subHours(new Date(), 5), 'yyyy-MM-dd');
   const totalSeconds = (todayData?.totalSeconds || 0) + (isToday ? activeSessionSeconds : 0);
 
   const formatTotalTime = (sec: number) => {
@@ -98,11 +98,14 @@ export default function Record() {
 
         <div className="flex border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
           <div className="w-10 bg-gray-50 border-r border-gray-200 flex flex-col">
-            {Array.from({ length: 24 }).map((_, h) => (
-              <div key={h} className="h-4 text-[9px] text-gray-500 flex items-center justify-center border-b border-gray-200 last:border-0 font-bold">
-                {String(h).padStart(2, '0')}
-              </div>
-            ))}
+            {Array.from({ length: 24 }).map((_, h) => {
+              const displayHour = (h + 5) % 24;
+              return (
+                <div key={displayHour} className="h-4 text-[9px] text-gray-500 flex items-center justify-center border-b border-gray-200 last:border-0 font-bold">
+                  {String(displayHour).padStart(2, '0')}
+                </div>
+              );
+            })}
           </div>
           <div className="flex-1 grid grid-cols-6 pl-[1px]">
             {blocks.map((blockIndex) => {

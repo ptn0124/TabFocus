@@ -56,7 +56,8 @@ export default function Home() {
     setSubjects(subs);
     
     const allStudyData = await studyDataStorage.getValue();
-    const dateStr = format(new Date(), 'yyyy-MM-dd');
+    const logicalTodayMs = Date.now() - 5 * 3600 * 1000;
+    const dateStr = format(new Date(logicalTodayMs), 'yyyy-MM-dd');
     const today = allStudyData.find(d => d.date === dateStr);
     setTodayData(today || null);
     
