@@ -9,5 +9,8 @@ export default defineConfig({
     host_permissions: ['<all_urls>'],
     name: 'TabFocus',
     description: 'Study timer and focus tracker inspired by Yeolpumta',
+    browser_specific_settings: {
+      gecko: { id: "pthfdsa@gmail.com" }
+    }
   },
 });
