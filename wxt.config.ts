@@ -14,8 +14,8 @@ export default defineConfig({
         id: "pthfdsa@gmail.com",
         // @ts-ignore
         data_collection_permissions: {
-          is_optional: false,
-          unknown_data_policy: "none"
+          optional: [],
+          required: ["none"]
         }
       }
     }
