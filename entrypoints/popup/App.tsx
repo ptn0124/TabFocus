@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Home from './components/Home.tsx';
 import Record from './components/Record.tsx';
 import StudyTools from './components/StudyTools.tsx';
@@ -8,6 +8,17 @@ import { ddayStorage, DDay } from '../../utils/storage';
 import clsx from 'clsx';
 
 type Tab = 'home' | 'record' | 'tools' | 'blocklist';
+
+class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error: Error | null}> {
+  constructor(props: any) { super(props); this.state = { hasError: false, error: null }; }
+  static getDerivedStateFromError(error: Error) { return { hasError: true, error }; }
+  render() {
+    if (this.state.hasError) {
+      return <div className="p-4 text-red-500 bg-white"><h1>Error</h1><pre className="text-xs">{this.state.error?.message}</pre></div>;
+    }
+    return this.props.children;
+  }
+}
 
 function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
@@ -42,6 +53,7 @@ function App() {
   };
 
   return (
+    <ErrorBoundary>
     <div className="w-[400px] h-[600px] overflow-hidden flex flex-col bg-dark-bg text-gray-100 font-sans">
       <div className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar pb-20">
         <div className="p-5">
@@ -77,6 +89,7 @@ function App() {
         <NavButton tab="blocklist" icon={<ShieldBan size={20} />} label="차단" isActive={activeTab === 'blocklist'} onClick={() => setActiveTab('blocklist')} />
       </nav>
     </div>
+    </ErrorBoundary>
   );
 }
 

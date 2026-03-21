@@ -41,6 +41,71 @@ export default defineBackground(() => {
        // Since the background worker could die, relying on alarms or popup to commit time is safer.
        // The timer logic will update elapsedSeconds when it's running. 
        // For exact 10-min block fractions, we compute dynamically in Popup based on elapsed time vs total time studied today.
+       
+       // Update badge text if studying
+       try {
+         const focusState = await focusStateStorage.getValue();
+         if (focusState?.isStudying && focusState.startTime) {
+           const diff = Math.floor((Date.now() - focusState.startTime) / 1000) + focusState.elapsedSeconds;
+           let m = Math.floor(diff / 60);
+           let h = Math.floor(m / 60);
+           m = m % 60;
+           const badgeText = h > 0 ? `${h}h` : `${m}m`;
+           if (browser.action) await browser.action.setBadgeText({ text: badgeText });
+           else if (browser.browserAction) await browser.browserAction.setBadgeText({ text: badgeText });
+         }
+       } catch (err) {
+         console.error('Badge update error', err);
+       }
+    }
+  });
+
+  // Watch for study state changes to immediately update the badge
+  focusStateStorage.watch(async (state) => {
+    try {
+      if (state?.isStudying) {
+        if (browser.action) {
+          await browser.action.setBadgeBackgroundColor({ color: '#3b82f6' });
+          await browser.action.setBadgeText({ text: 'ON' });
+        } else if (browser.browserAction) {
+          await browser.browserAction.setBadgeBackgroundColor({ color: '#3b82f6' });
+          await browser.browserAction.setBadgeText({ text: 'ON' });
+        }
+      } else {
+        if (browser.action) await browser.action.setBadgeText({ text: '' });
+        else if (browser.browserAction) await browser.browserAction.setBadgeText({ text: '' });
+      }
+    } catch (err) {
+      console.error('Badge watch error', err);
+    }
+  });
+
+  // Initialize immediately on load in case we are already studying
+  focusStateStorage.getValue().then(async (state) => {
+    try {
+      if (state?.isStudying) {
+        let badgeText = 'ON';
+        if (state.startTime) {
+          const diff = Math.floor((Date.now() - (state.startTime || Date.now())) / 1000) + state.elapsedSeconds;
+          let m = Math.floor(diff / 60);
+          let h = Math.floor(m / 60);
+          m = m % 60;
+          badgeText = h > 0 ? `${h}h` : (m > 0 ? `${m}m` : 'ON');
+        }
+        
+        if (browser.action) {
+          await browser.action.setBadgeBackgroundColor({ color: '#3b82f6' });
+          await browser.action.setBadgeText({ text: badgeText });
+        } else if (browser.browserAction) {
+          await browser.browserAction.setBadgeBackgroundColor({ color: '#3b82f6' });
+          await browser.browserAction.setBadgeText({ text: badgeText });
+        }
+      } else {
+        if (browser.action) await browser.action.setBadgeText({ text: '' });
+        else if (browser.browserAction) await browser.browserAction.setBadgeText({ text: '' });
+      }
+    } catch (err) {
+      console.error('Badge init error', err);
     }
   });
 });
