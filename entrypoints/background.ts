@@ -1,5 +1,5 @@
 // wxt auto-imports defineBackground and browser
-import { focusStateStorage, blocklistStorage, DailyStudyData, studyDataStorage } from '../utils/storage';
+import { focusStateStorage, blocklistStorage, DailyStudyData, studyDataStorage, standaloneTimerStorage } from '../utils/storage';
 
 export default defineBackground(() => {
   // Listen for navigation to block restricted sites
@@ -57,6 +57,21 @@ export default defineBackground(() => {
        } catch (err) {
          console.error('Badge update error', err);
        }
+    } else if (alarm.name === 'countdown-timer') {
+      try {
+        const state = await standaloneTimerStorage.getValue();
+        if (state.isRunning) {
+          browser.notifications.create('countdown-done', {
+            type: 'basic',
+            iconUrl: browser.runtime.getURL('/icon/128.png'),
+            title: 'TabFocus 타이머 종료',
+            message: '설정한 카운트다운 시간이 모두 끝났습니다!',
+          });
+          await standaloneTimerStorage.setValue({ isRunning: false, endTime: null, remainingSeconds: 0 });
+        }
+      } catch (err) {
+        console.error('Timer notification error', err);
+      }
     }
   });
 
@@ -106,6 +121,19 @@ export default defineBackground(() => {
       }
     } catch (err) {
       console.error('Badge init error', err);
+    }
+  });
+
+  // Schedule alarm for countdown timer
+  standaloneTimerStorage.watch(async (state) => {
+    try {
+      if (state?.isRunning && state.endTime) {
+        browser.alarms.create('countdown-timer', { when: state.endTime });
+      } else {
+        browser.alarms.clear('countdown-timer');
+      }
+    } catch (err) {
+      console.error('Alarm creation error', err);
     }
   });
 });

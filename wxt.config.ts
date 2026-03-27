@@ -5,7 +5,7 @@ export default defineConfig({
   modules: ['@wxt-dev/module-react'],
   manifest: {
     manifest_version: 3,
-    permissions: ['storage', 'tabs', 'alarms'],
+    permissions: ['storage', 'tabs', 'alarms', 'notifications'],
     host_permissions: ['<all_urls>'],
     name: 'TabFocus',
     description: 'Study timer and focus tracker inspired by Yeolpumta',

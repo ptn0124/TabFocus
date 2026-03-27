@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { studyDataStorage, subjectsStorage, focusStateStorage, DailyStudyData, Subject } from '../../../utils/storage';
 import { format, addDays, subDays, subHours } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import RecordEditor from './RecordEditor';
 
 export default function Record() {
   const [selectedDate, setSelectedDate] = useState<Date>(() => subHours(new Date(), 5));
   const [allStudyData, setAllStudyData] = useState<DailyStudyData[]>([]);
   const [todayData, setTodayData] = useState<DailyStudyData | null>(null);
   const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -62,6 +64,11 @@ export default function Record() {
   // Generate 24 hours * 6 blocks
   const blocks = Array.from({ length: 144 }, (_, i) => i);
 
+  const handleDataChanged = async () => {
+    const allData = await studyDataStorage.getValue();
+    setAllStudyData(allData);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between px-4">
@@ -78,17 +85,31 @@ export default function Record() {
         </button>
       </div>
 
-      <div className="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center animate-slide-up">
+      <div className="glass-panel p-6 rounded-2xl flex flex-col items-center justify-center animate-slide-up hover:shadow-lg transition-all duration-300">
         <h2 className="text-gray-400 text-sm font-medium mb-1">총 공부 시간</h2>
         <div className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-400 to-primary-600">
           {formatTotalTime(totalSeconds)}
         </div>
       </div>
 
-      <div className="glass-panel-light p-5 rounded-2xl animate-slide-up hover:-translate-y-1 hover:shadow-2xl hover:shadow-primary-500/10 transition-all duration-300">
-        <div className="flex justify-between items-end mb-4">
-          <h3 className="font-bold text-lg text-gray-900">Study Record</h3>
-          <div className="text-xs text-gray-500 flex items-center mb-1 font-medium">
+      {isEditing ? (
+        <RecordEditor
+          selectedDate={selectedDate}
+          todayData={todayData}
+          subjects={subjects}
+          onBack={() => setIsEditing(false)}
+          onDataChanged={handleDataChanged}
+        />
+      ) : (
+        <div className="animate-slide-up">
+          <div 
+            onClick={() => setIsEditing(true)}
+            className="glass-panel-light p-5 rounded-2xl cursor-pointer transform hover:-translate-y-2 hover:scale-[1.02] hover:shadow-2xl hover:shadow-primary-500/20 hover:border-primary-500/30 transition-all duration-300 relative z-10"
+            title="클릭하여 상세 기록 편집"
+          >
+          <div className="flex justify-between items-end mb-4">
+            <h3 className="font-bold text-lg text-gray-900 group-hover:text-primary-600 transition-colors flex items-center">Study Record</h3>
+            <div className="text-xs text-gray-500 flex items-center mb-1 font-medium">
             <div className="w-2 h-2 rounded-sm bg-gray-100 border border-gray-300 mr-1" />
             <span className="mr-3">0분</span>
             <div className="w-2 h-2 rounded-sm bg-primary-500 mr-1" />
@@ -150,7 +171,9 @@ export default function Record() {
             })}
           </div>
         </div>
-      </div>
+        </div>
+        </div>
+      )}
     </div>
   );
 }
